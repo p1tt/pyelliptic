@@ -129,6 +129,18 @@ class _OpenSSL:
         self.EC_KEY_set_private_key.argtypes = [ctypes.c_void_p,
                                                 ctypes.c_void_p]
 
+        self.EC_GROUP_new_by_curve_name = self._lib.EC_GROUP_new_by_curve_name
+        self.EC_GROUP_new_by_curve_name.restype = ctypes.c_void_p
+        self.EC_GROUP_new_by_curve_name.argtypes = [ctypes.c_int]
+
+        self.EC_POINT_set_compressed_coordinates_GFp = self._lib.EC_POINT_set_compressed_coordinates_GFp
+        self.EC_POINT_set_compressed_coordinates_GFp.restype = ctypes.c_int
+        self.EC_POINT_set_compressed_coordinates_GFp.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p]
+
+        self.EC_GROUP_free = self._lib.EC_GROUP_free
+        self.EC_GROUP_free.restype = None
+        self.EC_GROUP_free.argtypes = [ctypes.c_void_p]
+
         self.ECDH_OpenSSL = self._lib.ECDH_OpenSSL
         self._lib.ECDH_OpenSSL.restype = ctypes.c_void_p
         self._lib.ECDH_OpenSSL.argtypes = []

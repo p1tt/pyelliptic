@@ -458,3 +458,35 @@ class ECC:
             raise RuntimeError("Fail to verify data")
         ctx = Cipher(key_e, iv, 0, ciphername)
         return ctx.ciphering(ciphertext)
+
+    def point_compress(self, x, y):
+        return (x, y[len(y)-1] % 2)
+
+    def point_uncompress(self, x, ybit):
+        try:
+            bn_x = OpenSSL.BN_bin2bn(x, len(x), 0)
+
+            group = OpenSSL.EC_GROUP_new_by_curve_name(self.curve)
+            point = OpenSSL.EC_POINT_new(group)
+            OpenSSL.EC_POINT_set_compressed_coordinates_GFp(group, point, bn_x, ybit, 0)
+
+            bn_nx = OpenSSL.BN_new()
+            bn_ny = OpenSSL.BN_new()
+
+            if (OpenSSL.EC_POINT_get_affine_coordinates_GFp(group, point, bn_nx, bn_ny, 0)) == 0:
+                raise Exception("[OpenSSL] EC_POINT_get_affine_coordinates_GFp FAIL ...")
+            nx = OpenSSL.malloc(0, OpenSSL.BN_num_bytes(bn_nx))
+            ny = OpenSSL.malloc(0, OpenSSL.BN_num_bytes(bn_ny))
+            OpenSSL.BN_bn2bin(bn_nx, nx)
+            nx = nx.raw
+            OpenSSL.BN_bn2bin(bn_ny, ny)
+            ny = ny.raw
+
+            assert nx == x
+            return (nx, ny)
+        finally:
+            OpenSSL.BN_free(bn_x)
+            OpenSSL.EC_GROUP_free(group)
+            OpenSSL.EC_POINT_free(point)
+            OpenSSL.BN_free(bn_nx)
+            OpenSSL.BN_free(bn_ny)
