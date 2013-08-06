@@ -482,7 +482,6 @@ class ECC:
             OpenSSL.BN_bn2bin(bn_ny, ny)
             ny = ny.raw
 
-            assert nx == x
             return (nx, ny)
         finally:
             OpenSSL.BN_free(bn_x)
