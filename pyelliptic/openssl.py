@@ -141,6 +141,10 @@ class _OpenSSL:
         self.EC_GROUP_free.restype = None
         self.EC_GROUP_free.argtypes = [ctypes.c_void_p]
 
+        self.EC_POINT_point2oct = self._lib.EC_POINT_point2oct
+        self.EC_POINT_point2oct.restype = ctypes.c_int
+        self.EC_POINT_point2oct.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p]
+
         self.ECDH_OpenSSL = self._lib.ECDH_OpenSSL
         self._lib.ECDH_OpenSSL.restype = ctypes.c_void_p
         self._lib.ECDH_OpenSSL.argtypes = []

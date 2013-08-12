@@ -460,8 +460,44 @@ class ECC:
         return ctx.ciphering(ciphertext)
 
     def point_compress(self, x, y):
-        return (x, y[len(y)-1] % 2)
+        POINT_CONVERSION_COMPRESSED = 2
+        POINT_CONVERSION_UNCOMPRESSED = 4
+    
+        try:
+            bn_x = OpenSSL.BN_bin2bn(x, len(x), 0)
+            bn_y = OpenSSL.BN_bin2bn(y, len(y), 0)
+    
+            key = OpenSSL.EC_KEY_new_by_curve_name(self.curve)
+            if key == 0:
+                raise Exception("[OpenSSL] EC_KEY_new_by_curve_name FAIL ...")
+    
+            group = OpenSSL.EC_KEY_get0_group(key)
+            point = OpenSSL.EC_POINT_new(group)
+            if (OpenSSL.EC_POINT_set_affine_coordinates_GFp(group, point, bn_x, bn_y, 0)) == 0:
+                raise Exception("[OpenSSL] EC_POINT_set_affine_coordinates_GFp FAIL ...")
+            if (OpenSSL.EC_KEY_set_public_key(key, point)) == 0:
+                raise Exception("[OpenSSL] EC_KEY_set_public_key FAIL ...")
+            if (OpenSSL.EC_KEY_check_key(key)) == 0:
+                raise Exception("[OpenSSL] EC_KEY_check_key FAIL ...")
+    
+            reqlength = OpenSSL.EC_POINT_point2oct(group, point, POINT_CONVERSION_COMPRESSED, 0, 0, 0)
+            if reqlength == 0:
+                raise Exception("[OpenSSL] EC_POINT_point2oct FAIL ...")
+            comp = OpenSSL.malloc(0, reqlength)
+            length = OpenSSL.EC_POINT_point2oct(group, point, POINT_CONVERSION_COMPRESSED, comp, reqlength, 0)
+            if length == 0:
+                raise Exception("[OpenSSL] EC_POINT_point2oct FAIL ...")
+            assert reqlength == length
+            assert comp.raw[0] == 0x02 or comp.raw[0] == 0x03
+            ybit = 0 if comp.raw[0] == 0x02 else 1
+            return (comp.raw[1:], ybit)
 
+        finally:
+            OpenSSL.BN_free(bn_x)
+            OpenSSL.BN_free(bn_y)
+            OpenSSL.EC_KEY_free(key)
+            OpenSSL.EC_POINT_free(point)
+    
     def point_uncompress(self, x, ybit):
         try:
             bn_x = OpenSSL.BN_bin2bn(x, len(x), 0)
