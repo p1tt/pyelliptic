@@ -459,6 +459,31 @@ class ECC:
         ctx = Cipher(key_e, iv, 0, ciphername)
         return ctx.ciphering(ciphertext)
 
+    def oct2point(self, data):
+        try:
+            group = OpenSSL.EC_GROUP_new_by_curve_name(self.curve)
+            point = OpenSSL.EC_POINT_new(group)
+            OpenSSL.EC_POINT_oct2point(group, point, data, len(data), 0)
+
+            bn_x = OpenSSL.BN_new()
+            bn_y = OpenSSL.BN_new()
+
+            if (OpenSSL.EC_POINT_get_affine_coordinates_GFp(group, point, bn_x, bn_y, 0)) == 0:
+                raise Exception("[OpenSSL] EC_POINT_get_affine_coordinates_GFp FAIL ...")
+            x = OpenSSL.malloc(0, OpenSSL.BN_num_bytes(bn_x))
+            y = OpenSSL.malloc(0, OpenSSL.BN_num_bytes(bn_y))
+            OpenSSL.BN_bn2bin(bn_x, x)
+            x = x.raw
+            OpenSSL.BN_bn2bin(bn_y, y)
+            y = y.raw
+
+            return (x, y)
+        finally:
+            OpenSSL.EC_GROUP_free(group)
+            OpenSSL.EC_POINT_free(point)
+            OpenSSL.BN_free(bn_x)
+            OpenSSL.BN_free(bn_y)
+ 
     def point_compress(self, x, y):
         POINT_CONVERSION_COMPRESSED = 2
         POINT_CONVERSION_UNCOMPRESSED = 4
