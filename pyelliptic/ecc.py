@@ -513,9 +513,7 @@ class ECC:
             if length == 0:
                 raise Exception("[OpenSSL] EC_POINT_point2oct FAIL ...")
             assert reqlength == length
-            assert comp.raw[0] == 0x02 or comp.raw[0] == 0x03
-            ybit = 0 if comp.raw[0] == 0x02 else 1
-            return (comp.raw[1:], ybit)
+            return comp.raw
 
         finally:
             OpenSSL.BN_free(bn_x)
